@@ -1,7 +1,7 @@
 name:                export
 version:             0.0.0
-synopsis:            TODO
-description:         TODO
+synopsis:            turn a haskell function into (1) a server, (2) a command line interface, or (3) a foreign C export.
+description:         turn a haskell function into (1) a server, (2) a command line interface, or (3) a foreign C export.
 homepage:            http://github.com/sboosali/export#readme
 license:             BSD3
 license-file:        LICENSE
@@ -24,21 +24,22 @@ library
  ghc-options:         -Wall -fno-warn-unticked-promoted-constructors
  default-extensions: AutoDeriveTypeable DeriveDataTypeable DeriveGeneric
                      DeriveFunctor DeriveFoldable DeriveTraversable
-                     LambdaCase EmptyCase TypeOperators PostfixOperators 
+                     LambdaCase EmptyCase TypeOperators PostfixOperators
                      ViewPatterns BangPatterns KindSignatures
                      NamedFieldPuns RecordWildCards TupleSections
                      MultiWayIf DoAndIfThenElse EmptyDataDecls Arrows
-                     MultiParamTypeClasses FlexibleContexts FlexibleInstances 
+                     MultiParamTypeClasses FlexibleContexts FlexibleInstances
                      TypeFamilies FunctionalDependencies
-                     ScopedTypeVariables StandaloneDeriving 
+                     ScopedTypeVariables StandaloneDeriving
 
  exposed-modules:
   Export
   Export.Types
   Export.Main
+  --Export.Curry
 
  other-modules:
-  Export.Extra
+  -- Export.Extra
 
  build-depends:
     base >=4.7 && <5
@@ -51,24 +52,24 @@ library
   -- , stm
   -- , template-haskell
 
-  , deepseq 
+  -- , vinyl
+  , deepseq
   , semigroups
-  -- ,
   -- , lens
   -- , exceptions
   -- , free
-  -- , bifunctors 
-  -- , profunctors 
+  -- , bifunctors
+  -- , profunctors
   -- , either
-  -- , pipes  
-  -- , formatting 
+  -- , pipes
+  -- , formatting
   -- , servant
   -- , Earley
   -- , split
-  -- , interpolatedstring-perl6 
+  -- , interpolatedstring-perl6
   -- , wl-pprint-text
   -- , text
-  -- , aeson 
+  -- , aeson
   -- , hashable
   -- , unordered-containers
   -- , async
@@ -99,7 +100,7 @@ test-suite doctest
  build-depends:
     base
   , export
-  , doctest 
+  , doctest
 
 
 -- $ stack test unittest
@@ -133,8 +134,7 @@ benchmark command
  ghc-options:      -Wall -threaded -rtsopts -with-rtsopts=-N
 
  build-depends:
-    base 
+    base
   , export
   , criterion
-  , deepseq 
-
+  , deepseq
