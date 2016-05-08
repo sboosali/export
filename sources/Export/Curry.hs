@@ -10,42 +10,56 @@ import Data.Vinyl
 Read @(RUncurry function inputs output)@ as
 "the @function@ uncurries into these @inputs@ and this @output@".
 
-relate a (curried) function to its inputs and output.
-"left-associates" the right-associative @(->)@.
+multi parameter type classes are "relations": thic class relates
+a (curried) function to its inputs and output.
+it "left-associates" the right-associative @(->)@.
 
 the uncurried function is strict in each input, which is okay,
 given its use by "Function" (i.e. receiving external arguments, w
 hich even after marshalling are probably evaluated).
 
->>> let uLessThan = rUncurry (<)
 >>> :t (<)
 Ord a => a -> a -> Bool
+>>> let uLessThan = rUncurry (<)
 >>> :t uLessThan
 Ord a => Rec Identity [a,a] -> Bool
->>> uLessThan (0 :& 1 :& RNil) == (<) 0 1  -- same order
+>>>  (<) 0 1  ==  uLessThan (0 :* 1 :* RNil)  -- same order too
 True
 
 >>> rUncurry "value" RNil == "value"
 True
 
 @
-rcurry :: Curry input output -> (Rec Id input -> output)
+TODO:
+rCurry :: Curry input output -> (Rec Id input -> output)
 @
 
 naming: "record uncurry".
+
+(instances don't use `OverlappingInstances`,
+because they perform induction on the `inputs` type).
 
 -}
 class (inputs ~ Inputs function, output ~ Output function) =>
  RUncurry (function :: *) (inputs :: [*]) (output :: *) where
   rUncurry :: function -> (Rec I inputs -> output)
 
--- | if you can uncurry a function into its inputs and its output,
--- then you can uncurry that function with one extra input too
--- (i.e. the induction).
+{-| if you can uncurry a function into its inputs and its output
+(@RUncurry function inputs output@),
+then you can uncurry that function with one extra input too
+(@RUncurry (input -> function) (input ': inputs) output)@.
+
+i.e. the induction.
+
+-}
 instance (RUncurry function inputs output) => RUncurry (input -> function) (input ': inputs) output where
   rUncurry function = \(Identity input :& inputs) -> rUncurry (function input) inputs
 
--- | a value uncurries to itself (i.e. the base case).
+{- | a value uncurries to itself
+(@(Inputs value ~ '[], Output value ~ value) => RUncurry value '[] value@).
+
+i.e. the base case.
+-}
 instance (Inputs value ~ '[], Output value ~ value) => RUncurry value '[] value where
   rUncurry value = \RNil -> value
 

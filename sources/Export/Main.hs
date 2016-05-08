@@ -1,7 +1,13 @@
 {-# LANGUAGE DataKinds #-}
-{-
+{- |
 
+@
 stack build && stack exec export-example
+@
+
+(you can read the source as an example.)
+
+(exported for the `executable`.)
 
 -}
 module Export.Main where

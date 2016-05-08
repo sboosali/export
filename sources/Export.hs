@@ -105,6 +105,119 @@ type family Replicate (n :: Nat) (a :: *) :: [*] where
 
 type Vec n a = Rec I (Replicate n a)
 
+{-| make an exportable 'Function' from any haskell function.
+
+>>> let hs_or = newFunction (P::P "or") (||)
+>>> :kind! hs_or
+Function I I "or" [Bool,Bool] Bool
+
+TODO:
+
+>>> :set -XVisibleTypeApplication
+>>> let hs_and = newFunction @"and" (&&)
+
+newFunction
+ :: forall name function.
+ -> function
+ -> ...
+
+-}
+newFunction
+ :: forall name function proxy.
+  ( RUncurry function
+             (Inputs function)
+             (Output function)
+  )
+ => proxy name
+ -> function
+ -> (HaskellFunction name (Inputs function) (Output function))
+newFunction _ function
+ = Function $ (fmap Identity . fmap Identity) (rUncurry function)
+
+{-| call a 'Function', like a haskell function.
+
+>>> (||) False True
+True
+>>> hs_or `call` (False :* True :* Z)
+True
+
+@call (Function function) = function@
+
+-}
+call
+ :: Function m f name inputs output
+ -> (Rec f inputs -> m (f output))
+call (Function function) = function
+
+{-| export an effectful unary function.
+
+-}
+fromKleisli
+ :: forall name m a b proxy.
+ ( Functor m
+ , RUncurry (a -> m b)
+            '[a]
+            (m b)
+ )
+ => proxy name
+ -> Kleisli m a b
+ -> Function m I name '[a] b
+fromKleisli _ (Kleisli function)
+ = Function $ ((fmap . fmap) Identity) (rUncurry function)
+
+-- haskellFunction
+ -- :: (Curry (Rec f input) (m (f output)) function)
+ -- => Function m f name inputs output
+ -- -> function
+-- haskellFunction (Function function)
+--  = (fmap getIdentity . fmap getIdentity) (rCurry function)
+
+{-|
+
+the name of the function, on both levels (value-level and type-level).
+
+(ignores its input)
+
+>>> unTagged (functionName hs_and)
+"and"
+>>> :kind! functionName hs_and
+Tagged "and" String
+
+-}
+functionName
+ :: forall m f name inputs output. (KnownSymbol name)
+ => Function m f name inputs output
+ -> Tagged name String
+functionName _ = Tagged (symbolVal (P::P name))
+
+{- e.g.
+
+@
+let f :: a -> b -> c
+let hs_f = newFunction2 (P::P "f") f
+let newFunction2 :: proxy name -> function -> (Function I I name (Inputs function) (Output function))
+    newFunction2 = newFunction
+@
+
+specializing:
+
+@
+newFunction2 _ :: (RUncurry (a -> b -> c) (Inputs (a -> b -> c)) (Output (a -> b -> c)))
+               => (a -> b -> c) -> (Function I I name (Inputs (a -> b -> c)) (Output (a -> b -> c)))
+newFunction2 _ :: (RUncurry (a -> b -> c) [a,b] c))
+               => (a -> b -> c) -> (Function I I name [a,b] c)
+(Function I I _ [a,b] c) ~ (Rec f [a,b] -> I (I c))
+@
+
+@
+fmap   :: (a -> b) -> f a -> f b
+fmap   :: (c -> I c) -> ((->) a ((->) b (I c)) -> ((->) a ((->) b (I c))
+fmap   :: (c -> I c) -> (a -> b -> c) -> (a -> b -> I c)
+fmap I :: (a -> b -> c) -> (a -> b -> I c)
+@
+-}
+
+
 {-|
 
 @
@@ -139,100 +252,3 @@ marshall (Function function) = Function \inputs -> do
   output <- (into) _output
   return output
   -}
-
-{-|
-
->>> let hs_and = newFunction (P::P "and") (&&)
->>> hs_and (True :* False :* Z)
-False
-
-TODO>>> :set -XVisibleTypeApplication
->>> let hs_and = newFunction @"and" (&&)
-
-newFunction
- :: forall name function.
- -> function
- -> ...
-
-e.g.
-@
-let f :: a -> b -> c
-let hs_f = newFunction2 (P::P "f") f
-let newFunction2 :: proxy name -> function -> (Function I I name (Inputs function) (Output function))
-    newFunction2 = newFunction
-@
-
-specializing:
-
-@
-newFunction2 _ :: (RUncurry (a -> b -> c) (Inputs (a -> b -> c)) (Output (a -> b -> c)))
-               => (a -> b -> c) -> (Function I I name (Inputs (a -> b -> c)) (Output (a -> b -> c)))
-newFunction2 _ :: (RUncurry (a -> b -> c) [a,b] c))
-               => (a -> b -> c) -> (Function I I name [a,b] c)
-(Function I I _ [a,b] c) ~ (Rec f [a,b] -> I (I c))
-@
-
-@
-fmap   :: (a -> b) -> f a -> f b
-fmap   :: (c -> I c) -> ((->) a ((->) b (I c)) -> ((->) a ((->) b (I c))
-fmap   :: (c -> I c) -> (a -> b -> c) -> (a -> b -> I c)
-fmap I :: (a -> b -> c) -> (a -> b -> I c)
-@
-
--}
-newFunction
- :: forall name function proxy.
-  ( RUncurry function
-             (Inputs function)
-             (Output function)
-  )
- => proxy name
- -> function
- -> (HaskellFunction name (Inputs function) (Output function))
-newFunction _ function
- = Function $ (fmap Identity . fmap Identity) (rUncurry function)
-
-call
- :: Function m f name inputs output
- -> (Rec f inputs -> m (f output))
-call (Function function) = function
-
-{-|
-
--}
-fromKleisli
- :: forall name m a b proxy.
- ( Functor m
- , RUncurry (a -> m b)
-            '[a]
-            (m b)
- )
- => proxy name
- -> Kleisli m a b
- -> Function m I name '[a] b
-fromKleisli _ (Kleisli function)
- = Function $ ((fmap . fmap) Identity) (rUncurry function)
-
--- haskellFunction
- -- :: (Curry (Rec f input) (m (f output)) function)
- -- => Function m f name inputs output
- -- -> function
--- haskellFunction (Function function) = (fmap getIdentity . fmap getIdentity) (rCurry function)
-
-{-|
-
-the name of the function, on both levels (value-level and type-level).
-
-(ignores its input)
-
->>> unTagged (functionName hs_and)
-"and"
->>> :kind! functionName hs_and
-Tagged "and" String
-
--}
-functionName
- :: forall m f name inputs output. (KnownSymbol name)
- => Function m f name inputs output
- -> Tagged name String
-functionName _ = Tagged (symbolVal (P::P name))
