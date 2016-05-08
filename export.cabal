@@ -34,15 +34,19 @@ library
 
  exposed-modules:
   Export
-  Export.Types
+  Export.Marshall
+  Export.Function
   Export.Curry
+
+  -- for haddocks
+  Export.Vinyl
 
   -- for executable
   Export.Main
 
  other-modules:
   Export.Extra
-  Export.Vinyl
+  -- Export.Types
 
  build-depends:
     base >=4.7 && <5

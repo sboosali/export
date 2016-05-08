@@ -12,9 +12,7 @@ stack build && stack exec export-example
 -}
 module Export.Main where
 import Export
---import Export.Types
 import Export.Vinyl
-import Export.Curry
 import Export.Extra
 
 import Text.Read (readMaybe)

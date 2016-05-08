@@ -15,10 +15,13 @@ import Data.Vinyl
 import Data.Vinyl.Functor
 --import Data.Vinyl.TypeLevel hiding (Nat(..))
 
+import Data.Tagged (Tagged(..))
+
 import Data.Functor.Product
 import GHC.TypeLits
 import GHC.Exts (Constraint)
 import Data.Proxy
+import Numeric.Natural (Natural)
 
 
 (&:) :: a -> Rec I as -> Rec I (a ': as)
@@ -59,6 +62,19 @@ type family Length (as :: [k]) :: Nat where
 
 rproxy :: RecApplicative as => Rec Proxy as
 rproxy = rpure Proxy
+{-|
+
+>>> :set -XDataKinds
+>>> import Data.Proxy
+>>> tLength (Proxy :: Proxy [Int,String])
+Tagged 2
+
+-}
+tLength
+ :: forall (as :: [k]) proxy. (KnownNat (Length as))
+ => proxy as
+ -> Tagged (Length as) Natural
+tLength _ = Tagged $ fromInteger (natVal (P::P (Length as)))
 
 -- rdict :: RecApplicative as => Rec (Dict0 c) as
 -- rdict = reifyConstraint0
