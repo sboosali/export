@@ -25,13 +25,6 @@
 -- @
 -- @
 -- -- 2. make it marshallable
--- hs_or = 'marshalled' u_or
---
--- -- :: Function Maybe (Const String) "or" '[Bool, Bool] Bool
--- -- (inferred, specialized)
--- @
--- @
--- -- 3. call it
 -- main = do
 --
 -- -- unmarshalled:
@@ -40,7 +33,7 @@
 --  -- ==> True
 --
 --  -- marshalled via 'String':
---  let hs_String_or = marshalled u_or
+--  let hs_String_or = 'marshalled' u_or
 --
 --  print $ hs_String_or \`call_` ('C' \"False\" :& C \"True\" :& Z)  -- 'call_'
 --  -- ==> Just "True"
@@ -51,17 +44,17 @@
 --  print $ hs_JSON_or \`call_` (B.pack "false" ':#' B.pack "true" :# Z)
 --  -- ==> Right "true"
 --
---  -- marshalled via 'Ptr':
+--  -- marshalled via "Foreign.Ptr":
 --  let hs_Ptr_or = marshalled u_or
 --
 --  pFalse <- 'new' False
 --  pTrue  <- new True
---  pOr    <- hs_Ptr_or \`call` (pFalse :& pTrue :& Z)
+--  pOr    <- hs_Ptr_or \`call` (pFalse ':&' pTrue :& Z)
 --  print =<< 'peek' pOr
 --  -- ==> True
 -- @
 -- @
--- 4. \"export\" it
+-- 3. \"export\" it
 -- TODO
 -- @
 --
