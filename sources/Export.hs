@@ -13,13 +13,13 @@ import Export.Types
 import Export.Curry
 import Export.Extra
 
---import Data.Tagged (Tagged(..))
+import Data.Tagged (Tagged(..))
 import Data.Vinyl
 import Data.Vinyl.Functor
 --import Data.Vinyl.TypeLevel hiding (Nat(..))
 
 import GHC.TypeLits
---import Control.Arrow (Kleisli(..))
+import Control.Arrow (Kleisli(..))
 import Data.Proxy
 import Data.Typeable
 import GHC.Exts (Constraint)
@@ -184,7 +184,7 @@ newFunction
  :: forall name function proxy.
   ( RUncurry function
              (Inputs function)
-            (Output function)
+             (Output function)
   )
  => proxy name
  -> function
@@ -199,16 +199,25 @@ call (Function function) = function
 
 {-|
 
+-}
 fromKleisli
- :: proxy name
+ :: forall name m a b proxy.
+ ( Functor m
+ , RUncurry (a -> m b)
+            '[a]
+            (m b)
+ )
+ => proxy name
  -> Kleisli m a b
  -> Function m I name '[a] b
 fromKleisli _ (Kleisli function)
- = Function $ rUncurry function
- -}
+ = Function $ ((fmap . fmap) Identity) (rUncurry function)
 
--- functionBody :: (Curry (Rec f input) (m (f output)) function) => Function m f name inputs output -> function
--- functionBody (Function body) = rCurry body
+-- haskellFunction
+ -- :: (Curry (Rec f input) (m (f output)) function)
+ -- => Function m f name inputs output
+ -- -> function
+-- haskellFunction (Function function) = (fmap getIdentity . fmap getIdentity) (rCurry function)
 
 {-|
 
@@ -221,9 +230,9 @@ the name of the function, on both levels (value-level and type-level).
 >>> :kind! functionName hs_and
 Tagged "and" String
 
+-}
 functionName
  :: forall m f name inputs output. (KnownSymbol name)
  => Function m f name inputs output
  -> Tagged name String
 functionName _ = Tagged (symbolVal (P::P name))
--}

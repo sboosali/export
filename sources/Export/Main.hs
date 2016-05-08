@@ -8,6 +8,7 @@ module Export.Main where
 import Export
 import Export.Types
 import Export.Curry
+import Export.Extra
 
 import Data.Vinyl
 
@@ -30,7 +31,6 @@ main = do
  print $ tOutput    cLessThan_mono
  print $ tSignature cLessThan_mono
 
- print $ ('a' &: 'b' &: 'c' &: RNil :: Vec 3 Char)
  print $ ('a' :* 'b' :* 'c' :* RNil :: Vec 3 Char)
 
  let hs_or = newFunction (P::P "or") (||)
@@ -39,3 +39,4 @@ main = do
   -- (         False :*          True :* RNil)
   -- (I        False :& I        True :& RNil)
   -- (Identity False :& Identity True :& RNil)
+ print $ (hs_or & functionName)
