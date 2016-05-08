@@ -10,16 +10,16 @@ import Text.Read (readMaybe)
 {-| a canonical marshalling for a functor @f@.
 
 @
-Marshall from_f into_f m f
+Marshall f m from_f into_f
 @
 
 naming:
 
-* @m@: a monad that the marshalling can use and fail in.
-(e.g. @m ~ IO@).
 * @f@: a functor. the foreign\/serialized\/persisted type.
 parametrized over @a@ to enable greater type-safety
 (e.g. @f ~ "Data.Storeable.Ptr"@).
+* @m@: a monad that the marshalling can use and fail in.
+(e.g. @m ~ IO@).
 * @from_f@: a class for marshalling from @f@ (e.g. "Data.Storeable.peek")
 * @into_f@: a class for marshalling into @f@ (e.g. "Data.Storeable.poke")
 * @a@: (anything that safisfies the constraints.
@@ -31,15 +31,13 @@ is like a single-parameter typeclass on @f@. i.e. you can only have one
 but different @f@'s can use the same monad or the same constraints.
 
 -}
--- class (MonadThrow m) => Marshall from_f into_f m f
---TODO use data (like Iso), not a class?
 
-class (Monad m, Functor f) => --TODO Export.Marshall
+class (Monad m, Functor f) =>
 
-    Marshall (from_f :: * -> Constraint)
-             (into_f :: * -> Constraint)
+    Marshall (f      :: * -> *)
              (m      :: * -> *)
-             (f      :: * -> *) --TODO make first param
+             (from_f :: * -> Constraint)
+             (into_f :: * -> Constraint)
 
     | f -> m from_f into_f
  where
@@ -48,12 +46,19 @@ class (Monad m, Functor f) => --TODO Export.Marshall
  into :: (into_f a) => a   -> m (f a) --TODO marshallInto
 
 from_
- :: (Marshall from_f into_f m (C b), from_f a)
+ :: ( Marshall (C b) m from_f into_f
+    , from_f a
+    )
  => b
  -> m a
 from_ = Const >>> from
 
-into_ :: (Marshall from_f into_f m (C b), into_f a) => a -> m b
+into_
+ :: ( Marshall (C b) m from_f into_f
+    , into_f a
+    )
+ => a
+ -> m b
 into_ = into >>> fmap getConst
 
 {-
@@ -63,7 +68,7 @@ instance Marshall Storeable Storeable IO Ptr
 instance Marshall FromJSON ToJSON (Either String) (C JSON)
 -}
 
-instance Marshall Read Show Maybe (C String) where
+instance Marshall (C String) Maybe Read Show where
 
  from :: (Read a) => C String a -> Maybe a
  from = getConst >>> readMaybe
@@ -81,7 +86,7 @@ e.g. usage:
 Just "True"
 >>> :t hs_Marshall_or
 hs_Marshall_or
-  :: (from_f Bool, into_f Bool, Marshall from_f into_f m f) =>
+  :: (from_f Bool, into_f Bool, Marshall f m from_f into_f) =>
      Function m f "or" '[Bool, Bool] Bool
 
 >>> let hs_String_or = hs_Marshall_or :: Function Maybe (Const String) "or" [Bool,Bool] Bool
@@ -98,7 +103,7 @@ e.g. specialization:
 
 @
 marshalled
- :: ( Marshall Read Show Maybe (C String)
+ :: ( Marshall (C String) Maybe Read Show
 
     , "Export.Vinyl.EachHas" Read inputs
       -- the inputs can all be 'Read'.
@@ -116,7 +121,7 @@ marshalled
 -}
 marshalled
  :: forall f m from_f into_f name input output.
-    ( Marshall from_f into_f m f
+    ( Marshall f m from_f into_f
     , EachHas from_f input
     ,         into_f output
     )
