@@ -32,6 +32,8 @@ but different @f@'s can use the same monad or the same constraints.
 
 -}
 
+-- use data (like Iso), not a class?
+
 class (Monad m, Functor f) =>
 
     Marshall (f      :: * -> *)

@@ -29,7 +29,7 @@ naming:
 (e.g. checking that the 'Symbol' a valid python identifier).
 
 -}
-data Function--TODO Export.Function
+data Function
  (m      :: * -> *)
  (f      :: * -> *)
  (name   :: Symbol)
