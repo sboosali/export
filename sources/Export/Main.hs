@@ -1,7 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-
 
-stack exec export-example
+stack build && stack exec export-example
 
 -}
 module Export.Main where
@@ -29,3 +29,6 @@ main = do
  print $ tInputs    cLessThan_mono
  print $ tOutput    cLessThan_mono
  print $ tSignature cLessThan_mono
+
+ print $ ('a' &: 'b' &: 'c' &: RNil :: Vec 3 Char)
+ print $ ('a' :* 'b' :* 'c' :* RNil :: Vec 3 Char)

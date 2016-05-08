@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds, PatternSynonyms #-}
 {-|
 
 
@@ -147,3 +147,7 @@ type P = Proxy
 (&:) :: a -> Rec I as -> Rec I (a ': as)
 (&:) x xs = Identity x :& xs
 infixr 7 &:
+
+pattern (:*) :: a -> Rec I as -> Rec I (a ': as)
+pattern (:*) x xs = Identity x :& xs
+infixr 7 :*

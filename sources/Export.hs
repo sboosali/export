@@ -98,6 +98,11 @@ type Dict1 = Dict
 data Dict0 c a where
   Dict0 :: c a => Dict0 c a
 
+type family Replicate (n :: Nat) (a :: *) :: [*] where
+  Replicate 0 _a = '[]
+  Replicate n a  = a ': Replicate (n-1) a
+
+type Vec n a = Rec I (Replicate n a)
 
 {-|
 
