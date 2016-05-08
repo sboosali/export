@@ -45,13 +45,15 @@ tSignature _ = typeRep (P::P function)
 {-| make an exportable 'Function' from any haskell function.
 
 >>> let hs_or = newFunction (P::P "or") (||)
->>> :kind! hs_or
-Function I I "or" [Bool,Bool] Bool
+>>> :t hs_or
+hs_or :: Function I I "or" '[Bool, Bool] Bool
+
+(see 'P').
 
 TODO:
 
 >>> :set -XVisibleTypeApplication
->>> let hs_and = newFunction @"and" (&&)
+>>> let hs_or = newFunction @"or" (&&)
 
 newFunction
  :: forall name function.
@@ -67,7 +69,7 @@ newFunction
   )
  => proxy name
  -> function
- -> (HaskellFunction name (Inputs function) (Output function))
+ -> (Function I I name (Inputs function) (Output function))
 newFunction _ function
  = Function $ (fmap Identity . fmap Identity) (rUncurry function)
 
@@ -192,13 +194,21 @@ nameless = P
 
 e.g. usage:
 
->>> let hs_String_or = marshalled hs_or
->>> :t hs_String_or
-Function Maybe (Const String) "or" [Bool,Bool] Bool
->>> hs_String_or `call_` (C "False" :& C "True" :& Z)
+>>> let hs_Marshall_or = marshalled hs_or
+>>> hs_Marshall_or `call_` (C "False" :& C "True" :& Z)
 Just "True"
+>>> :t hs_Marshall_or
+hs_Marshall_or
+  :: (from_f Bool, into_f Bool, Marshall from_f into_f m f) =>
+     Function m f "or" '[Bool, Bool] Bool
 
-Note that (1) its type was inferred
+>>> let hs_String_or = hs_Marshall_or :: Function Maybe (Const String) "or" [Bool,Bool] Bool
+>>> :t hs_String_or
+hs_String_or
+ :: Function Maybe (Const String) "or" '[Bool, Bool] Bool
+>>> hs_String_or `call_` (C "False" :& C "True" :& Z)
+
+Note that (1) its type was inferred (and can be specialized)
 and (2) it consumes Booleans encoded as Strings, and
 produces a Boolean encoded as a String too. (see 'call_')
 
