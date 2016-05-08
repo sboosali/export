@@ -36,6 +36,12 @@ tLength
  -> Integer
 tLength _ = natVal (Proxy :: Proxy (Length as))
 
+
+-- tInputs
+--
+-- tOutput
+
+
 {-|
 
 @

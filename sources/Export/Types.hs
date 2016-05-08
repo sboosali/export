@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds #-}
 {-|
 
 
@@ -45,9 +46,14 @@ optinally-optional arguments
 
 
 -}
-module Export.Types where
-import Export.Extra()
+module Export.Types
+ ( module Export.Types
+ , Identity(..)
+ ) where
+--import Export.Extra
 
+import Data.Vinyl
+import Data.Vinyl.Functor
 --import Control.Monad.Catch (MonadThrow(..))
 
 --import Control.Applicative (Const(..))
@@ -78,11 +84,13 @@ into_ = into >>> fmap getConst
 from_ :: (Marshall from into m (C b), from a) => b -> m a
 from_ = Const >>> from
 
+{-
 instance Marshall
 
 instance Marshall Storeable Storeable IO Ptr
 
 instance Marshall FromJSON ToJSON (Either String) (C JSON)
+-}
 
 instance Marshall Show Read Maybe (C String)
  into :: (Show a) => a -> Maybe (C String a)
@@ -127,8 +135,12 @@ instance Profunctor (Function m f name) where
 {-| no effects, any inputs.
 
 type HaskellFunction = Function I I
+-}
 
 type I = Identity
 
 type C = Const
--}
+
+(&:) :: a -> Rec I as -> Rec I (a ': as)
+(&:) x xs = Identity x :& xs
+infixr 7 &:

@@ -36,7 +36,7 @@ library
   Export
   Export.Types
   Export.Main
-  --Export.Curry
+  Export.Curry
 
  other-modules:
   -- Export.Extra
@@ -52,7 +52,7 @@ library
   -- , stm
   -- , template-haskell
 
-  -- , vinyl
+  , vinyl
   , deepseq
   , semigroups
   -- , lens
@@ -75,8 +75,8 @@ library
   -- , async
   -- , parallel
 
--- $ stack exec export
-executable export
+-- $ stack exec export-example
+executable export-example
  hs-source-dirs:      executables
  main-is:             Main.hs
 
