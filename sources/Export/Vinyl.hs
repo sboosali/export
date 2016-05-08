@@ -24,17 +24,6 @@ import Data.Proxy
 import Numeric.Natural (Natural)
 
 
-(&:) :: a -> Rec I as -> Rec I (a ': as)
-(&:) x xs = Identity x :& xs
-infixr 7 &:
-
-pattern (:*) :: a -> Rec I as -> Rec I (a ': as)
-pattern (:*) x xs = Identity x :& xs
-infixr 7 :*
-
-pattern Z :: forall (f :: k -> *). Rec f '[]
-pattern Z = RNil
-
 type I = Identity
 
 type C = Const
@@ -54,6 +43,17 @@ pattern P = Proxy
 
 pattern (:*:) :: f a -> g a -> Product f g a
 pattern f :*: g = (Pair f g)
+
+pattern (:*) :: a -> Rec I as -> Rec I (a ': as)
+pattern (:*) x xs = I x :& xs
+infixr 7 :*
+
+pattern (:#) :: forall a (b :: k) (bs :: [k]). a -> Rec (C a) bs -> Rec (C a) (b ': bs)
+pattern (:#) x xs = C x :& xs
+infixr 7 :#
+
+pattern Z :: forall (f :: k -> *). Rec f '[]
+pattern Z = RNil
 
 -- "Number of parameters must match family declaration"
 type family Length (as :: [k]) :: Nat where

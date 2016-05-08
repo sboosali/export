@@ -57,13 +57,13 @@ main = do
  putStrLn "\nString-marshalled..."
  let hs_String_or = marshalled u_or
  -- inferred :: Function Maybe (C String) "or" [Bool,Bool] Bool
- print $ hs_String_or `call_` (C "False" :& C "True" :& Z)
+ print $ hs_String_or `call_` ("False" :# "True" :# Z)
  -- Just "True"
 
  putStrLn "\nJSON-marshalled..."
  let hs_JSON_or = marshalled u_or
  -- inferred :: Function (Either String) (C ByteString) "or" [Bool,Bool] Bool
- print $ hs_JSON_or `call_` (C (B.pack "false") :& C (B.pack "true") :& Z)
+ print $ hs_JSON_or `call_` (B.pack "false" :# B.pack "true" :# Z)
  -- Right "True"
 
  putStrLn "\nPtr-marshalled..."
