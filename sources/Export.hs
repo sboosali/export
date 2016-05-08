@@ -86,6 +86,9 @@ call
  -> (Rec f inputs -> m (f output))
 call (Function function) = function
 
+{- | like 'call', but un-wraps 'Const', for convenience.
+
+-}
 call_
  :: (Functor m)
  => Function m (C a) name inputs output
@@ -115,16 +118,15 @@ fromKleisli _ (Kleisli function)
 -- haskellFunction (Function function)
 --  = (fmap getIdentity . fmap getIdentity) (rCurry function)
 
-{-|
-
-the name of the function, on both levels (value-level and type-level).
+{-| the name of the function,
+on both levels (value-level and type-level).
 
 (ignores its input)
 
->>> unTagged (functionName hs_and)
-"and"
->>> :kind! functionName hs_and
-Tagged "and" String
+>>> unTagged (functionName hs_or)
+"or"
+>>> :kind! functionName hs_or
+Tagged "or" String
 
 -}
 functionName
@@ -133,7 +135,8 @@ functionName
  -> Tagged name String
 functionName _ = Tagged (symbolVal (P::P name))
 
-{- e.g.
+{-
+e.g.
 
 @
 let f :: a -> b -> c
@@ -158,21 +161,6 @@ fmap   :: (c -> I c) -> ((->) a ((->) b (I c)) -> ((->) a ((->) b (I c))
 fmap   :: (c -> I c) -> (a -> b -> c) -> (a -> b -> I c)
 fmap I :: (a -> b -> c) -> (a -> b -> I c)
 @
--}
-
-{-| no name.
-
-e.g. for convenience
-
->>> 'newFunction' nameless (+)
-
--}
-nameless :: P ""
-nameless = P
-
-{-| 'Marshall' the inputs and output of a 'Function'.
-
-e.g.
 
 @
 marshalled
@@ -186,6 +174,51 @@ marshalled
  :: (Marshall ToJSON FromJSON Maybe (Const JSON), RecAll FromJSON input, ToJSON output)
  =>        Function I            name input output
  -> Maybe (Function (Const JSON) name input output)
+@
+
+-}
+
+{-| no name.
+
+e.g. for convenience
+
+>>> 'newFunction' nameless (+)
+
+-}
+nameless :: P ""
+nameless = P
+
+{-| transform a 'Function' by 'Marshall'ing its inputs and output.
+
+e.g. usage:
+
+>>> let hs_String_or = marshalled hs_or
+>>> :t hs_String_or
+Function Maybe (Const String) "or" [Bool,Bool] Bool
+>>> hs_String_or `call_` (C "False" :& C "True" :& Z)
+Just "True"
+
+Note that (1) its type was inferred
+and (2) it consumes Booleans encoded as Strings, and
+produces a Boolean encoded as a String too. (see 'call_')
+
+e.g. specialization:
+
+@
+marshalled
+ :: ( Marshall Read Show Maybe (C String)
+
+    , "Export.Vinyl.EachHas" Read inputs
+      -- the inputs can all be 'Read'.
+
+    , Show output)
+      -- the output can be 'Show'n.
+
+ => Function I     'I'          name inputs output
+    -- take a function that consumes haskell types and always succeeds...
+
+ -> Function Maybe ('C' String) name inputs output
+    -- ...to a function that consumes strings may fail (when parsing them).
 @
 
 -}

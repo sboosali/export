@@ -38,19 +38,17 @@ main = do
 
  print $ ('a' :* 'b' :* 'c' :* RNil :: Vec 3 Char)
 
- let hs_or = newFunction (P::P "or") (||)
- print $ hs_or `call` (False :* True :* Z)
-  -- (         False :*          True :* Z   )
-  -- (         False :*          True :* RNil)
-  -- (I        False :& I        True :& RNil)
-  -- (Identity False :& Identity True :& RNil)
- print $ (hs_or & functionName)
-
  let rs = (C "False" :& C "0" :& Z) :: Rec (C String) [Bool,Integer]
  print $ rtraverseFrom (P::P Read) (getConst >>> readMaybe) rs
 
+ let hs_or = newFunction (P::P "or") (||)
+ -- inferred :: Function I I "or" [Bool,Bool] Bool
+ print $ hs_or `call` (False :* True :* Z)
+
+ print $ (hs_or & functionName)
+
  let hs_String_or = marshalled hs_or
- -- inferred :: Function Maybe (C String) _ [Bool,Bool] Bool
+ -- inferred :: Function Maybe (C String) "or" [Bool,Bool] Bool
  print $ hs_String_or `call_` (C "False" :& C "True" :& Z)
  print $ (fmap getConst . call hs_String_or) (C "False" :& C "True" :& Z)
  -- Just "True"

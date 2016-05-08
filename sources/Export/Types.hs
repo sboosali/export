@@ -96,7 +96,7 @@ type HaskellFunction = Function I I
 
 ----------------------------------------------------------------------------
 
-{-|
+{-| a canonical marshalling for a functor @f@.
 
 @
 Marshall from_f into_f m f
