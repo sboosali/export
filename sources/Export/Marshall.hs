@@ -4,6 +4,10 @@ import Export.Vinyl
 import Export.Extra
 import Export.Function
 
+import qualified Data.ByteString.Lazy as B
+import qualified Data.Text as T
+import Data.Aeson (FromJSON,ToJSON,encode,eitherDecode')
+
 import GHC.Exts (Constraint)
 import Text.Read (readMaybe)
 import Foreign
@@ -54,7 +58,7 @@ from_
     )
  => b
  -> m a
-from_ = Const >>> from
+from_ = C >>> from
 
 into_
  :: ( Marshall (C b) m from_f into_f
@@ -73,7 +77,15 @@ instance Marshall (C String) Maybe Read Show where
  -- >>> maybe (throwM "") return
 
  into :: (Show a) => a -> Maybe (C String a)
- into = show >>> Const >>> return
+ into = show >>> C >>> return
+
+
+-- | marshall via text
+instance Marshall (C T.Text) Maybe Read Show where
+
+ from = getConst >>> T.unpack >>> readMaybe
+
+ into = show >>> T.pack >>> C >>> return
 
 
 -- | marshall via pointers
@@ -81,11 +93,12 @@ instance Marshall Ptr IO Storable Storable where
   from = peek
   into = new
 
-
-{- -- | marshall via JSON
-instance Marshall (C JSON) (Either String) FromJSON ToJSON where
--}
-
+-- | marshall via JSON
+instance Marshall (C B.ByteString) (Either String) FromJSON ToJSON where
+  -- not Value. use newtype?
+  from = getConst >>> eitherDecode'
+  into = encode >>> C >>> return
+  -- eitherDecode' :: FromJSON a => ByteString -> Either String a
 
 {-| transform a 'Function' by 'Marshall'ing its inputs and output.
 

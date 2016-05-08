@@ -17,6 +17,7 @@ import Export.Extra
 
 import Foreign
 import Text.Read (readMaybe)
+import qualified Data.ByteString.Lazy.Char8 as B
 
 main :: IO ()
 main = do
@@ -24,11 +25,11 @@ main = do
  putStrLn "\nrUncurry..."
  let cLessThan_mono = (<) :: Int -> Int -> Bool
  let uLessThan_mono = rUncurry cLessThan_mono
- print $ uLessThan_mono (0 &: 1 &: RNil)
+ print $ uLessThan_mono (0 :* 1 :* RNil)
 
  let cLessThan_poly = (<) :: Ord a => a -> a -> Bool
  let uLessThan_poly = rUncurry cLessThan_poly
- print $ uLessThan_poly ((0::Int) &: 1 &: RNil)
+ print $ uLessThan_poly ((0::Int) :* 1 :* RNil)
 
  putStrLn "\ngetSignature..."
  print $ tLength (P::P '[Int,String])
@@ -57,11 +58,17 @@ main = do
  let hs_String_or = marshalled u_or
  -- inferred :: Function Maybe (C String) "or" [Bool,Bool] Bool
  print $ hs_String_or `call_` (C "False" :& C "True" :& Z)
- print $ (fmap getConst . call hs_String_or) (C "False" :& C "True" :& Z)
  -- Just "True"
+
+ putStrLn "\nJSON-marshalled..."
+ let hs_JSON_or = marshalled u_or
+ -- inferred :: Function (Either String) (C ByteString) "or" [Bool,Bool] Bool
+ print $ hs_JSON_or `call_` (C (B.pack "false") :& C (B.pack "true") :& Z)
+ -- Right "True"
 
  putStrLn "\nPtr-marshalled..."
  let hs_Ptr_or = marshalled u_or
+ -- inferred :: Function IO Ptr "or" [Bool,Bool] Bool
  pFalse <- new False
  pTrue  <- new True
  pOr    <- hs_Ptr_or `call` (pFalse :& pTrue :& Z)
