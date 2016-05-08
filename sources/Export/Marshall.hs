@@ -6,6 +6,7 @@ import Export.Function
 
 import GHC.Exts (Constraint)
 import Text.Read (readMaybe)
+import Foreign
 
 {-| a canonical marshalling for a functor @f@.
 
@@ -34,7 +35,7 @@ but different @f@'s can use the same monad or the same constraints.
 
 -- use data (like Iso), not a class?
 
-class (Monad m, Functor f) =>
+class (Monad m) =>
 
     Marshall (f      :: * -> *)
              (m      :: * -> *)
@@ -63,13 +64,8 @@ into_
  -> m b
 into_ = into >>> fmap getConst
 
-{-
 
-instance Marshall Storeable Storeable IO Ptr
-
-instance Marshall FromJSON ToJSON (Either String) (C JSON)
--}
-
+-- | marshall via strings
 instance Marshall (C String) Maybe Read Show where
 
  from :: (Read a) => C String a -> Maybe a
@@ -78,6 +74,18 @@ instance Marshall (C String) Maybe Read Show where
 
  into :: (Show a) => a -> Maybe (C String a)
  into = show >>> Const >>> return
+
+
+-- | marshall via pointers
+instance Marshall Ptr IO Storable Storable where
+  from = peek
+  into = new
+
+
+{- -- | marshall via JSON
+instance Marshall (C JSON) (Either String) FromJSON ToJSON where
+-}
+
 
 {-| transform a 'Function' by 'Marshall'ing its inputs and output.
 
