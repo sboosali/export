@@ -1,9 +1,9 @@
 {-# LANGUAGE DataKinds, PolyKinds, UndecidableInstances, KindSignatures #-}
 module Export.Curry where
-import Export.Types
+-- import Export.Types
 import Export.Vinyl
 
-import Data.Vinyl
+-- import Data.Vinyl
 
 
 {-| Uncurry any function (i.e. of any arity, zero or more).

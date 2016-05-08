@@ -154,42 +154,6 @@ fmap I :: (a -> b -> c) -> (a -> b -> I c)
 @
 -}
 
-
-{-|
-
-@
-@
-
-e.g.
-
-@
-marshall
- :: (Marshall Storeable Storeable IO Ptr, RecAll Storeable input, Storeable output)
- =>     Function I   name input output
- -> IO (Function Ptr name input output)
-@
-
-@
-marshall
- :: (Marshall ToJSON FromJSON Maybe (Const JSON), RecAll FromJSON input, ToJSON output)
- =>        Function I            name input output
- -> Maybe (Function (Const JSON) name input output)
-@
-
--}
-
-{-
-marshall
- :: (Marshall into_f from_f m f, RecAll from_f input, into_f output)
- => Function I I name input output
- -> Function m f name input output
-marshall (Function function) = Function \inputs -> do
-  _inputs <- rtraverse (from) inputs
-  let _output = function _inputs
-  output <- (into) _output
-  return output
-  -}
-
 {-| no name.
 
 e.g. for convenience
@@ -199,3 +163,40 @@ e.g. for convenience
 -}
 nameless :: P ""
 nameless = P
+
+{-| 'Marshall' the inputs and output of a 'Function'.
+
+e.g.
+
+@
+marshalled
+ :: (Marshall Storeable Storeable IO Ptr, RecAll Storeable input, Storeable output)
+ =>     Function I   name input output
+ -> IO (Function Ptr name input output)
+@
+
+@
+marshalled
+ :: (Marshall ToJSON FromJSON Maybe (Const JSON), RecAll FromJSON input, ToJSON output)
+ =>        Function I            name input output
+ -> Maybe (Function (Const JSON) name input output)
+@
+
+-}
+-- marshalled
+--  :: forall f m from_f into_f name input output.
+--     ( Marshall from_f into_f m f
+--     , EachHas from_f input
+--     ,         into_f output
+--     )
+--  => Function I I name input output
+--  -> Function m f name input output
+-- marshalled (Function function) = Function $ \inputs -> do
+--   _inputs <- rtraverseFrom (P::P from_f) _from inputs
+--   let _output = function _inputs
+--   output <- into _output
+--   return output
+--
+--  where
+--  _from :: forall x. (from_f x) => f x -> m x
+--  _from = from

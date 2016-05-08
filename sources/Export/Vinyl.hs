@@ -1,5 +1,5 @@
 {-# LANGUAGE DataKinds, PolyKinds, PatternSynonyms #-}
-{-# LANGUAGE UndecidableInstances, ConstraintKinds, GADTs #-}
+{-# LANGUAGE UndecidableInstances, ConstraintKinds, GADTs, RankNTypes #-}
 {-
 
 (re-exports and some extensions).
@@ -15,6 +15,7 @@ import Data.Vinyl
 import Data.Vinyl.Functor
 --import Data.Vinyl.TypeLevel hiding (Nat(..))
 
+import Data.Functor.Product
 import GHC.TypeLits
 import GHC.Exts (Constraint)
 import Data.Proxy
@@ -37,6 +38,8 @@ type C = Const
 
 type P = Proxy
 
+type (:*:) = Product
+
 pattern I :: a -> Identity a
 pattern I x = Identity x
 
@@ -45,6 +48,9 @@ pattern C x = Const x
 
 pattern P :: forall (a :: k). Proxy a
 pattern P = Proxy
+
+pattern (:*:) :: f a -> g a -> Product f g a
+pattern f :*: g = (Pair f g)
 
 -- "Number of parameters must match family declaration"
 type family Length (as :: [k]) :: Nat where
@@ -80,6 +86,15 @@ type Dict1 = Dict
 data Dict0 c a where
   Dict0 :: c a => Dict0 c a
 
+reifyConstraint2
+  :: EachHas c rs
+  => proxy c
+  -> Rec f rs
+  -> Rec (f :*: Dict0 c) rs
+reifyConstraint2 proxy = \case
+ RNil -> RNil
+ (x :& xs) -> (x :*: Dict0) :& reifyConstraint2 proxy xs
+
 reifyConstraint1
   :: EachHas c rs
   => proxy c
@@ -103,3 +118,76 @@ type family Replicate (n :: Nat) (a :: *) :: [*] where
   Replicate n a  = a ': Replicate (n-1) a
 
 type Vec n a = Rec I (Replicate n a)
+
+-- {-| a restricted 'rtraverse', for convenience.
+--
+-- -}
+-- rtraverse'
+--  :: ( Applicative h
+--     , EachHas c rs
+--     )
+--  => (forall x. (c x) => x -> h (g x))
+--  -> proxy c
+--  -> Rec I rs
+--  -> h (Rec g rs)
+-- rtraverse' u rs = rtraverse _u _rs
+--  where
+--  _rs = reify rs
+--  _u = u
+
+-- {-| like 'rtraverse', for convenience.
+--
+-- -}
+-- rtraverse'
+--  :: ( Applicative h
+--     , EachHas c rs
+--     )
+--  => (forall x. (c (f x)) => f x -> h (g x))
+--  -> proxy c
+--  ->    Rec f rs
+--  -> h (Rec g rs)
+-- rtraverse' u rs = rtraverse _u _rs
+--  where
+--  _rs = reify rs
+--  _u = u
+
+{-| a restricted 'rtraverse', for convenience.
+
+e.g.
+
+>>> let rs = (C "False" :& C "0" :& Z) :: Rec (C String) [Bool,Integer]
+>>> rtraverseFrom (P::P Read) readMaybe rs  -- 'readMaybe'
+{False, 0}
+
+-- i.e. @Just (I False :& I 0 :& Z)@
+
+specializing:
+
+@
+rtraverse'
+ :: ( Applicative Maybe
+    , EachHas Read [Bool,Integer]
+    )
+ => (forall x. (Show x => String -> Maybe x)
+ -> Proxy Read
+ ->        Rec (C String) [Bool,Integer]
+ -> Maybe (Rec I          [Bool,Integer])
+@
+
+-}
+rtraverseFrom
+ :: forall c a rs h proxy.
+    ( Applicative h
+    , EachHas c rs  --or Marshall
+    )
+ => proxy c
+ -> (forall x. (c x) => a -> h x)
+ ->    Rec (C a) rs
+ -> h (Rec I     rs)
+rtraverseFrom proxy u rs = rtraverse _u _rs
+ where
+ _u :: forall x. (C a :*: Dict0 c) x -> h (I x)
+ _u (Pair (Const a) Dict0) = I <$> u a -- match on Dict0 exposes the @c x@
+ _rs = reifyConstraint2 proxy rs
+ -- _u (Const a :*: Dict0) = I <$> u a -- match on Dict0 exposes the @c x@
+ --_u (Const a) = I (u a)

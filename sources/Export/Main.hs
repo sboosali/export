@@ -17,7 +17,7 @@ import Export.Vinyl
 import Export.Curry
 import Export.Extra
 
-import Data.Proxy
+import Text.Read (readMaybe)
 
 main :: IO ()
 main = do
@@ -45,3 +45,10 @@ main = do
   -- (I        False :& I        True :& RNil)
   -- (Identity False :& Identity True :& RNil)
  print $ (hs_or & functionName)
+
+ let rs = (C "False" :& C "0" :& Z) :: Rec (C String) [Bool,Integer]
+ print $ rtraverseFrom (P::P Read) readMaybe rs
+
+ -- let hs_String_or = marshalled hs_or
+ -- -- inferred :: Function Maybe (C String) _ [Bool,Bool] Bool
+ -- print $ hs_String_or `call` (C "False" :& C "True" :& Z)
