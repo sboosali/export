@@ -22,7 +22,7 @@ import Text.Read (readMaybe)
 main :: IO ()
 main = do
 
- print $ tLength (P::P '[Int,String])
+ print $ getArity (P::P '[Int,String])
 
  let cLessThan_mono = (<) :: Int -> Int -> Bool
  let uLessThan_mono = rUncurry cLessThan_mono
@@ -32,9 +32,10 @@ main = do
  let uLessThan_poly = rUncurry cLessThan_poly
  print $ uLessThan_poly ((0::Int) &: 1 &: RNil)
 
- print $ tInputs    cLessThan_mono
- print $ tOutput    cLessThan_mono
- print $ tSignature cLessThan_mono
+ print $ getInputs    cLessThan_mono
+ print $ getOutput    cLessThan_mono
+ print $ getSignature cLessThan_mono
+ print $ getArity     cLessThan_mono
 
  print $ ('a' :* 'b' :* 'c' :* RNil :: Vec 3 Char)
 

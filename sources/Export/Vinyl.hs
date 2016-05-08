@@ -57,20 +57,6 @@ type family Length (as :: [k]) :: Nat where
  Length '[] = 0
  Length (_a ': as) = 1 + Length as -- UndecidableInstances
 
-{-|
-
->>> :set -XDataKinds
->>> import Data.Proxy
->>> tLength (Proxy :: Proxy [Int,String])
-2
-
--}
-tLength
- :: forall (as :: [k]) proxy. (KnownNat (Length as))
- => proxy as
- -> Integer
-tLength _ = natVal (P::P (Length as))
-
 rproxy :: RecApplicative as => Rec Proxy as
 rproxy = rpure Proxy
 

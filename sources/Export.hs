@@ -19,15 +19,16 @@ import Data.Tagged (Tagged(..))
 import Control.Arrow (Kleisli(..))
 import Data.Typeable
 import GHC.TypeLits
+import Numeric.Natural (Natural)
 
 
-tInputs
+getInputs
  :: forall function. ( EachHas Typeable (Inputs function)
                      , RecApplicative (Inputs function)
                      )
  => function
  -> [TypeRep]
-tInputs _ = recordToList ts
+getInputs _ = recordToList ts
  where
  ts = rmap ftypeRep ds                :: Rec (Const TypeRep)  (Inputs function)
  ds = reifyConstraint0 pTypeable ps   :: Rec (Dict0 Typeable) (Inputs function)
@@ -36,11 +37,31 @@ tInputs _ = recordToList ts
  ftypeRep :: forall a. Dict0 Typeable a -> C TypeRep a
  ftypeRep Dict0 = typeRep (P::P a) & Const
 
-tOutput :: forall function. (Typeable (Output function)) => function -> TypeRep
-tOutput _ = typeRep (P::P (Output function))
+getOutput :: forall function. (Typeable (Output function)) => function -> TypeRep
+getOutput _ = typeRep (P::P (Output function))
 
-tSignature :: forall function. (Typeable function) => function -> TypeRep
-tSignature _ = typeRep (P::P function)
+getSignature :: forall function. (Typeable function) => function -> TypeRep
+getSignature _ = typeRep (P::P function)
+
+getArity
+ :: forall function. (KnownNat (Length (Inputs function)))
+ => function
+ -> Tagged (Length (Inputs function)) Natural
+getArity _ = tLength (P::P (Inputs function))
+
+{-|
+
+>>> :set -XDataKinds
+>>> import Data.Proxy
+>>> tLength (Proxy :: Proxy [Int,String])
+Tagged 2
+
+-}
+tLength
+ :: forall (as :: [k]) proxy. (KnownNat (Length as))
+ => proxy as
+ -> Tagged (Length as) Natural
+tLength _ = Tagged $ fromInteger (natVal (P::P (Length as)))
 
 {-| make an exportable 'Function' from any haskell function.
 
