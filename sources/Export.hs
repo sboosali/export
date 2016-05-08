@@ -1,76 +1,76 @@
 {-# LANGUAGE DataKinds, PolyKinds, UndecidableInstances, ConstraintKinds, GADTs #-}
-{-| "export" haskell functions into:
-
-* servers
-* command-line interfaces
-* C foreign functions
-* and more
-
-example:
-
-@
-{- LANGUAGE DataKinds, ConstraintKinds #-}
-{- LANGUAGE NoMonomorphismRestriction #-}
-
-import Export
-import Foreign
-import qualified Data.ByteString.Lazy.Char8 as B
-
--- 1. uncurry any haskell function
-u_or = 'newFunction' ('P'::P "or") (||)
-
--- :: Function I I "or" '[Bool, Bool] Bool
--- (inferred)
-
--- 2. make it marshallable
-hs_or = 'marshalled' u_or
-
--- :: Function Maybe (Const String) "or" '[Bool, Bool] Bool
--- (inferred, specialized)
-
--- 3. call it
-main = do
-
--- unmarshalled:
-
- print $ u_or  `call`  ('I' False :& I True :& Z)  -- 'call'
- -- ==> True
-
- -- marshalled via 'String':
- let hs_String_or = marshalled u_or
-
- print $ hs_String_or `call_` ('C' \"False\" :& C \"True\" :& Z)  -- 'call_'
- -- ==> Just "True"
-
- -- marshalled via JSON ('B.ByteString'):
- let hs_JSON_or = marshalled u_or
-
- print $ hs_JSON_or `call_` (B.pack "false" ':#' B.pack "true" :# Z)
- -- ==> Right "true"
-
- -- marshalled via 'Ptr':
- let hs_Ptr_or = marshalled u_or
-
- pFalse <- 'new' False
- pTrue  <- new True
- pOr    <- hs_Ptr_or `call` (pFalse :& pTrue :& Z)
- print =<< 'peek' pOr
- -- ==> True
-
-
-
+-- | "export" haskell functions into:
+--
+-- * servers
+-- * command-line interfaces
+-- * C foreign functions
+-- * and more
+--
+-- example:
+--
+-- > {-# LANGUAGE DataKinds, ConstraintKinds #-}
+-- > {-# LANGUAGE NoMonomorphismRestriction #-}
+--
+-- @
+-- import Export
+-- import Foreign
+-- import qualified Data.ByteString.Lazy.Char8 as B
+-- @
+-- @
+-- -- 1. uncurry any haskell function
+-- u_or = 'newFunction' ('P'::P "or") (||)
+--
+-- -- :: Function I I "or" '[Bool, Bool] Bool
+-- -- (inferred)
+-- @
+-- @
+-- -- 2. make it marshallable
+-- hs_or = 'marshalled' u_or
+--
+-- -- :: Function Maybe (Const String) "or" '[Bool, Bool] Bool
+-- -- (inferred, specialized)
+-- @
+-- @
+-- -- 3. call it
+-- main = do
+--
+-- -- unmarshalled:
+--
+--  print $ u_or  \`call`  ('I' False :& I True :& Z)  -- 'call'
+--  -- ==> True
+--
+--  -- marshalled via 'String':
+--  let hs_String_or = marshalled u_or
+--
+--  print $ hs_String_or \`call_` ('C' \"False\" :& C \"True\" :& Z)  -- 'call_'
+--  -- ==> Just "True"
+--
+--  -- marshalled via JSON ('B.ByteString'):
+--  let hs_JSON_or = marshalled u_or
+--
+--  print $ hs_JSON_or \`call_` (B.pack "false" ':#' B.pack "true" :# Z)
+--  -- ==> Right "true"
+--
+--  -- marshalled via 'Ptr':
+--  let hs_Ptr_or = marshalled u_or
+--
+--  pFalse <- 'new' False
+--  pTrue  <- new True
+--  pOr    <- hs_Ptr_or \`call` (pFalse :& pTrue :& Z)
+--  print =<< 'peek' pOr
+--  -- ==> True
+-- @
+-- @
 -- 4. \"export\" it
-TODO
-@
-
-related:
-
-* <https://github.com/nh2/call-haskell-from-anything call-haskell-from-anything>
-
-* <https://haskell-servant.github.io/ servant>
-
--}
-
+-- TODO
+-- @
+--
+-- related:
+--
+-- * <https://github.com/nh2/call-haskell-from-anything call-haskell-from-anything>
+--
+-- * <https://haskell-servant.github.io/ servant>
+--
 module Export
  ( module Export.Marshall
  , module Export.Function
