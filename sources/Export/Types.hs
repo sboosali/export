@@ -57,6 +57,7 @@ import Data.Vinyl.Functor
 --import Control.Monad.Catch (MonadThrow(..))
 
 --import Control.Applicative (Const(..))
+import Data.Proxy (Proxy)
 
 {-|
 
@@ -140,6 +141,8 @@ type HaskellFunction = Function I I
 type I = Identity
 
 type C = Const
+
+type P = Proxy
 
 (&:) :: a -> Rec I as -> Rec I (a ': as)
 (&:) x xs = Identity x :& xs

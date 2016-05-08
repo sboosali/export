@@ -26,5 +26,6 @@ main = do
  let uLessThan_poly = rUncurry cLessThan_poly
  print $ uLessThan_poly ((0::Int) &: 1 &: RNil)
 
- -- print $ tInputs (<)
- -- print $ tOutput (<)
+ print $ tInputs    cLessThan_mono
+ print $ tOutput    cLessThan_mono
+ print $ tSignature cLessThan_mono
