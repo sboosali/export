@@ -47,8 +47,10 @@ main = do
  print $ (hs_or & functionName)
 
  let rs = (C "False" :& C "0" :& Z) :: Rec (C String) [Bool,Integer]
- print $ rtraverseFrom (P::P Read) readMaybe rs
+ print $ rtraverseFrom (P::P Read) (getConst >>> readMaybe) rs
 
- -- let hs_String_or = marshalled hs_or
- -- -- inferred :: Function Maybe (C String) _ [Bool,Bool] Bool
- -- print $ hs_String_or `call` (C "False" :& C "True" :& Z)
+ let hs_String_or = marshalled hs_or
+ -- inferred :: Function Maybe (C String) _ [Bool,Bool] Bool
+ print $ hs_String_or `call_` (C "False" :& C "True" :& Z)
+ print $ (fmap getConst . call hs_String_or) (C "False" :& C "True" :& Z)
+ -- Just "True"

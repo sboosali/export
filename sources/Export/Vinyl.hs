@@ -176,18 +176,18 @@ rtraverse'
 
 -}
 rtraverseFrom
- :: forall c a rs h proxy.
+ :: forall c f rs h proxy.
     ( Applicative h
     , EachHas c rs  --or Marshall
     )
  => proxy c
- -> (forall x. (c x) => a -> h x)
- ->    Rec (C a) rs
- -> h (Rec I     rs)
+ -> (forall x. (c x) => f x -> h x)
+ ->    Rec f rs
+ -> h (Rec I rs)
 rtraverseFrom proxy u rs = rtraverse _u _rs
  where
- _u :: forall x. (C a :*: Dict0 c) x -> h (I x)
- _u (Pair (Const a) Dict0) = I <$> u a -- match on Dict0 exposes the @c x@
+ _u :: forall x. (f :*: Dict0 c) x -> h (I x)
+ _u (Pair fa Dict0) = I <$> u fa -- match on Dict0 exposes the @c x@
  _rs = reifyConstraint2 proxy rs
  -- _u (Const a :*: Dict0) = I <$> u a -- match on Dict0 exposes the @c x@
  --_u (Const a) = I (u a)

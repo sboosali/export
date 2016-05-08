@@ -86,6 +86,12 @@ call
  -> (Rec f inputs -> m (f output))
 call (Function function) = function
 
+call_
+ :: (Functor m)
+ => Function m (C a) name inputs output
+ -> (Rec (C a) inputs -> m a)
+call_ (Function function) = function >>> fmap getConst
+
 {-| export an effectful unary function.
 
 -}
@@ -183,20 +189,20 @@ marshalled
 @
 
 -}
--- marshalled
---  :: forall f m from_f into_f name input output.
---     ( Marshall from_f into_f m f
---     , EachHas from_f input
---     ,         into_f output
---     )
---  => Function I I name input output
---  -> Function m f name input output
--- marshalled (Function function) = Function $ \inputs -> do
---   _inputs <- rtraverseFrom (P::P from_f) _from inputs
---   let _output = function _inputs
---   output <- into _output
---   return output
---
---  where
---  _from :: forall x. (from_f x) => f x -> m x
---  _from = from
+marshalled
+ :: forall f m from_f into_f name input output.
+    ( Marshall from_f into_f m f
+    , EachHas from_f input
+    ,         into_f output
+    )
+ => Function I I name input output
+ -> Function m f name input output
+marshalled (Function function) = Function $ \inputs -> do
+  _inputs <- rtraverseFrom (P::P from_f) _from inputs
+  let Identity (Identity _output) = function _inputs
+  output <- into _output
+  return output
+
+ where
+ _from :: forall x. (from_f x) => f x -> m x
+ _from = from
