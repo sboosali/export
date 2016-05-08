@@ -22,7 +22,7 @@ import Text.Read (readMaybe)
 main :: IO ()
 main = do
 
- print $ getArity (P::P '[Int,String])
+ print $ tLength (P::P '[Int,String])
 
  let cLessThan_mono = (<) :: Int -> Int -> Bool
  let uLessThan_mono = rUncurry cLessThan_mono
