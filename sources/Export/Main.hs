@@ -32,3 +32,10 @@ main = do
 
  print $ ('a' &: 'b' &: 'c' &: RNil :: Vec 3 Char)
  print $ ('a' :* 'b' :* 'c' :* RNil :: Vec 3 Char)
+
+ let hs_or = newFunction (P::P "or") (||)
+ print $ hs_or `call` (False :* True :* Z)
+  -- (         False :*          True :* Z   )
+  -- (         False :*          True :* RNil)
+  -- (I        False :& I        True :& RNil)
+  -- (Identity False :& Identity True :& RNil)

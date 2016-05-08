@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, PatternSynonyms #-}
+{-# LANGUAGE DataKinds, PatternSynonyms, PolyKinds #-}
 {-|
 
 
@@ -57,7 +57,8 @@ import Data.Vinyl.Functor
 --import Control.Monad.Catch (MonadThrow(..))
 
 --import Control.Applicative (Const(..))
-import Data.Proxy (Proxy)
+import Data.Proxy (Proxy(..))
+import GHC.TypeLits (Symbol)
 
 {-|
 
@@ -105,38 +106,37 @@ instance Marshall Show Read Maybe (C String)
 {-| an effectful, uncurried, named function.
 
 @
-Function f name input output
+Function m f name inputs output
 @
 
 naming:
 
 * @m@: a monad
 * @f@: a functor
-* @name@:
+* @name@: the name
 * @input@:
 * @output@:
 
+@name@ is type-level (not value-level) to support static validation
+(e.g. checking that the 'Symbol' a valid python identifier).
+
 -}
-{-
 data Function
  (m      :: * -> *)
  (f      :: * -> *)
  (name   :: Symbol)
- (input  :: [*])
+ (inputs :: [*])
  (output :: *)
-  -- docstring?
-  = Function (Rec f input -> m (f output))
-  deriving (Functor)
+  -- docstring? general metadata.
 
-instance Profunctor (Function m f name) where
- lmap before (Function function) = Function (before   >>> function)
- rmap after  (Function function) = Function (function >>> fmap after)
--}
+  = Function (Rec f inputs -> m (f output))
+
+  deriving (Functor)
 
 {-| no effects, any inputs.
 
-type HaskellFunction = Function I I
 -}
+type HaskellFunction = Function I I
 
 type I = Identity
 
@@ -151,3 +151,12 @@ infixr 7 &:
 pattern (:*) :: a -> Rec I as -> Rec I (a ': as)
 pattern (:*) x xs = Identity x :& xs
 infixr 7 :*
+
+pattern Z :: forall (f :: k -> *). Rec f '[]
+pattern Z = RNil
+
+pattern P :: forall (a :: k). Proxy a
+pattern P = Proxy
+
+pattern I :: a -> Identity a
+pattern I x = Identity x

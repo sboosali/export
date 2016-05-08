@@ -13,6 +13,7 @@ import Export.Types
 import Export.Curry
 import Export.Extra
 
+--import Data.Tagged (Tagged(..))
 import Data.Vinyl
 import Data.Vinyl.Functor
 --import Data.Vinyl.TypeLevel hiding (Nat(..))
@@ -41,7 +42,7 @@ tLength
  :: forall (as :: [k]) proxy. (KnownNat (Length as))
  => proxy as
  -> Integer
-tLength _ = natVal (Proxy :: Proxy (Length as))
+tLength _ = natVal (P::P (Length as))
 
 
 tInputs
@@ -52,18 +53,18 @@ tInputs
  -> [TypeRep]
 tInputs _ = recordToList ts
  where
- ts = rmap ftypeRep ds      :: Rec (Const TypeRep)  (Inputs function)
+ ts = rmap ftypeRep ds                :: Rec (Const TypeRep)  (Inputs function)
  ds = reifyConstraint0 pTypeable ps   :: Rec (Dict0 Typeable) (Inputs function)
- ps = rproxy                :: Rec Proxy            (Inputs function)
- pTypeable = (Proxy::Proxy Typeable)
+ ps = rproxy                          :: Rec Proxy            (Inputs function)
+ pTypeable = (P::P Typeable)
  ftypeRep :: forall a. Dict0 Typeable a -> Const TypeRep a
- ftypeRep Dict0 = typeRep (Proxy::Proxy a) & Const
+ ftypeRep Dict0 = typeRep (P::P a) & Const
 
 tOutput :: forall function. (Typeable (Output function)) => function -> TypeRep
-tOutput _ = typeRep (Proxy::Proxy (Output function))
+tOutput _ = typeRep (P::P (Output function))
 
 tSignature :: forall function. (Typeable function) => function -> TypeRep
-tSignature _ = typeRep (Proxy::Proxy function)
+tSignature _ = typeRep (P::P function)
 
 rproxy :: RecApplicative as => Rec Proxy as
 rproxy = rpure Proxy
@@ -137,25 +138,92 @@ marshall (Function function) = Function \inputs -> do
   let _output = function _inputs
   output <- (into) _output
   return output
+  -}
+
+{-|
+
+>>> let hs_and = newFunction (P::P "and") (&&)
+>>> hs_and (True :* False :* Z)
+False
+
+TODO>>> :set -XVisibleTypeApplication
+>>> let hs_and = newFunction @"and" (&&)
 
 newFunction
- :: proxy name
+ :: forall name function.
  -> function
- -> (HaskellFunction name (Input function) (Output function))
+ -> ...
+
+e.g.
+@
+let f :: a -> b -> c
+let hs_f = newFunction2 (P::P "f") f
+let newFunction2 :: proxy name -> function -> (Function I I name (Inputs function) (Output function))
+    newFunction2 = newFunction
+@
+
+specializing:
+
+@
+newFunction2 _ :: (RUncurry (a -> b -> c) (Inputs (a -> b -> c)) (Output (a -> b -> c)))
+               => (a -> b -> c) -> (Function I I name (Inputs (a -> b -> c)) (Output (a -> b -> c)))
+newFunction2 _ :: (RUncurry (a -> b -> c) [a,b] c))
+               => (a -> b -> c) -> (Function I I name [a,b] c)
+(Function I I _ [a,b] c) ~ (Rec f [a,b] -> I (I c))
+@
+
+@
+fmap   :: (a -> b) -> f a -> f b
+fmap   :: (c -> I c) -> ((->) a ((->) b (I c)) -> ((->) a ((->) b (I c))
+fmap   :: (c -> I c) -> (a -> b -> c) -> (a -> b -> I c)
+fmap I :: (a -> b -> c) -> (a -> b -> I c)
+@
+
+-}
+newFunction
+ :: forall name function proxy.
+  ( RUncurry function
+             (Inputs function)
+            (Output function)
+  )
+ => proxy name
+ -> function
+ -> (HaskellFunction name (Inputs function) (Output function))
 newFunction _ function
- = Function $ runcurry function
+ = Function $ (fmap Identity . fmap Identity) (rUncurry function)
+
+call
+ :: Function m f name inputs output
+ -> (Rec f inputs -> m (f output))
+call (Function function) = function
+
+{-|
 
 fromKleisli
  :: proxy name
  -> Kleisli m a b
  -> Function m I name '[a] b
 fromKleisli _ (Kleisli function)
- = Function $ runcurry function
+ = Function $ rUncurry function
+ -}
 
--- Curry (Rec f input) (m (f output))
-functionBody :: Function m f name input output -> (Rec f input -> m (f output))
-functionBody (Function body) = rcurry body
+-- functionBody :: (Curry (Rec f input) (m (f output)) function) => Function m f name inputs output -> function
+-- functionBody (Function body) = rCurry body
 
-functionName :: Function m f name input output -> Tagged String name
-functionName = Tagged (symbolVal (name :: Proxy name)) -- reifySymbol
+{-|
+
+the name of the function, on both levels (value-level and type-level).
+
+(ignores its input)
+
+>>> unTagged (functionName hs_and)
+"and"
+>>> :kind! functionName hs_and
+Tagged "and" String
+
+functionName
+ :: forall m f name inputs output. (KnownSymbol name)
+ => Function m f name inputs output
+ -> Tagged name String
+functionName _ = Tagged (symbolVal (P::P name))
 -}
