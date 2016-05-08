@@ -64,7 +64,7 @@ main = do
  let hs_JSON_or = marshalled u_or
  -- inferred :: Function (Either String) (C ByteString) "or" [Bool,Bool] Bool
  print $ hs_JSON_or `call_` (B.pack "false" :# B.pack "true" :# Z)
- -- Right "True"
+ -- Right "true"
 
  putStrLn "\nPtr-marshalled..."
  let hs_Ptr_or = marshalled u_or

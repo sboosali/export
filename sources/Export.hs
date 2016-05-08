@@ -14,6 +14,7 @@ example:
 
 import Export
 import Foreign
+import qualified Data.ByteString.Lazy.Char8 as B
 
 -- 1. uncurry any haskell function
 u_or = 'newFunction' ('P'::P "or") (||)
@@ -43,9 +44,9 @@ main = do
 
  -- marshalled via JSON ('B.ByteString'):
  let hs_JSON_or = marshalled u_or
- 
+
  print $ hs_JSON_or `call_` (B.pack "false" ':#' B.pack "true" :# Z)
- -- ==> Right "True"
+ -- ==> Right "true"
 
  -- marshalled via 'Ptr':
  let hs_Ptr_or = marshalled u_or
