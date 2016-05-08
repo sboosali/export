@@ -36,15 +36,23 @@ main = do
  -- ==> True
 
  -- marshalled via 'String':
+ let hs_String_or = marshalled u_or
 
- print $ hs_or `call_` ('C' \"False\" :& C \"True\" :& Z)  -- 'call_'
+ print $ hs_String_or `call_` ('C' \"False\" :& C \"True\" :& Z)  -- 'call_'
  -- ==> Just "True"
 
+ -- marshalled via JSON ('B.ByteString'):
+ let hs_JSON_or = marshalled u_or
+ 
+ print $ hs_JSON_or `call_` (B.pack "false" ':#' B.pack "true" :# Z)
+ -- ==> Right "True"
+
  -- marshalled via 'Ptr':
+ let hs_Ptr_or = marshalled u_or
 
  pFalse <- 'new' False
  pTrue  <- new True
- pOr    <- hs_or `call_` (pFalse :& pTrue :& Z)
+ pOr    <- hs_Ptr_or `call` (pFalse :& pTrue :& Z)
  print =<< 'peek' pOr
  -- ==> True
 
