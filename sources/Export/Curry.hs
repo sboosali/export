@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds, PolyKinds, UndecidableInstances, KindSignatures #-}
 module Export.Curry where
 import Export.Types
+import Export.Vinyl
 
 import Data.Vinyl
 

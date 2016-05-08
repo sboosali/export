@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, PatternSynonyms, PolyKinds #-}
+{-# LANGUAGE DataKinds #-}
 {-
 
 
@@ -46,18 +46,12 @@ optinally-optional arguments
 
 
 -}
-module Export.Types
- ( module Export.Types
- , Identity(..)
- ) where
---import Export.Extra
+module Export.Types where
+import Export.Vinyl
 
-import Data.Vinyl
-import Data.Vinyl.Functor
 --import Control.Monad.Catch (MonadThrow(..))
 
 --import Control.Applicative (Const(..))
-import Data.Proxy (Proxy(..))
 import GHC.TypeLits (Symbol)
 
 {-|
@@ -137,26 +131,3 @@ data Function
 
 -}
 type HaskellFunction = Function I I
-
-type I = Identity
-
-type C = Const
-
-type P = Proxy
-
-(&:) :: a -> Rec I as -> Rec I (a ': as)
-(&:) x xs = Identity x :& xs
-infixr 7 &:
-
-pattern (:*) :: a -> Rec I as -> Rec I (a ': as)
-pattern (:*) x xs = Identity x :& xs
-infixr 7 :*
-
-pattern Z :: forall (f :: k -> *). Rec f '[]
-pattern Z = RNil
-
-pattern P :: forall (a :: k). Proxy a
-pattern P = Proxy
-
-pattern I :: a -> Identity a
-pattern I x = Identity x
