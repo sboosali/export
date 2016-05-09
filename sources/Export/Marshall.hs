@@ -1,5 +1,17 @@
 {-# LANGUAGE DataKinds, KindSignatures, ConstraintKinds #-}
 {-# LANGUAGE RankNTypes #-}
+
+{-# LANGUAGE AutoDeriveTypeable, DeriveDataTypeable, DeriveGeneric,
+                     DeriveFunctor, DeriveFoldable, DeriveTraversable,
+                     LambdaCase, EmptyCase, TypeOperators, PostfixOperators,
+                     ViewPatterns, BangPatterns, KindSignatures,
+                     NamedFieldPuns, RecordWildCards, TupleSections,
+                     MultiWayIf, DoAndIfThenElse, EmptyDataDecls, Arrows,
+                     MultiParamTypeClasses, FlexibleContexts, FlexibleInstances,
+                     TypeFamilies, FunctionalDependencies,
+                     ScopedTypeVariables, StandaloneDeriving #-}
+-- inlined for doctest
+
 module Export.Marshall where
 import Export.Vinyl
 import Export.Extra
@@ -95,10 +107,13 @@ jsonMarshaller = Marshaller{..}
 
 e.g. usage:
 
->>> let hs_String_or = stringMarshaller `marshalling` u_or
+>>> :set -XDataKinds
+>>> let hs_or = newFunction (P::P "or") (||)
+
+>>> let hs_String_or = stringMarshaller `marshalling` hs_or
 >>> :t hs_String_or
-hs_String_or
- :: Function Maybe (Const String) "or" '[Bool, Bool] Bool
+hs_String_or :: Function Maybe (C String) "or" '[Bool, Bool] Bool
+
 >>> hs_String_or `call_` (C "False" :& C "True" :& Z)
 Just "True"
 

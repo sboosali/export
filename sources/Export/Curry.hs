@@ -1,10 +1,25 @@
 {-# LANGUAGE DataKinds, PolyKinds, UndecidableInstances, KindSignatures #-}
+
+{- |
+
+-}
 module Export.Curry where
 -- import Export.Types
 import Export.Vinyl
 
 -- import Data.Vinyl
 
+{- $setup
+
+(doctest)
+
+>>> :t (<)
+Ord a => a -> a -> Bool
+>>> let uLessThan = rUncurry (<)
+>>> :t uLessThan
+Ord a => Rec Identity [a,a] -> Bool
+
+-}
 
 {-| Uncurry any function (i.e. of any arity, zero or more).
 
@@ -19,11 +34,6 @@ the uncurried function is strict in each input, which is okay,
 given its use by "Function" (i.e. receiving external arguments, w
 hich even after marshalling are probably evaluated).
 
->>> :t (<)
-Ord a => a -> a -> Bool
->>> let uLessThan = rUncurry (<)
->>> :t uLessThan
-Ord a => Rec Identity [a,a] -> Bool
 >>>  (<) 0 1  ==  uLessThan (0 :* 1 :* RNil)  -- same order too
 True
 
@@ -67,8 +77,10 @@ instance (Inputs value ~ '[], Output value ~ value) => RUncurry value '[] value 
 
 {-|
 
->>> :kind! Inputs (Int -> String -> Bool)
+@
+-- >>> :kind! Inputs (Int -> String -> Bool)
 [Int,String]
+@
 
 -}
 type family Inputs (function :: k) :: [*] where
@@ -77,8 +89,10 @@ type family Inputs (function :: k) :: [*] where
 
 {-|
 
->>> :kind! Output (Int -> String -> Bool)
+@
+-- >>> :kind! Output (Int -> String -> Bool)
 Bool
+@
 
 -}
 type family Output (function :: k) :: * where

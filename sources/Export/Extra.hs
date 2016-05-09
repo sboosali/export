@@ -1,3 +1,8 @@
+{- | (internal module)
+
+exported for doctest.
+
+-}
 module Export.Extra
  ( module Export.Extra
  , module Control.DeepSeq

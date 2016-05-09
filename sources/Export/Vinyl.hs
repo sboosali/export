@@ -1,8 +1,10 @@
 {-# LANGUAGE DataKinds, PolyKinds, PatternSynonyms #-}
 {-# LANGUAGE UndecidableInstances, ConstraintKinds, GADTs, RankNTypes #-}
-{-
+{- | (internal module)
 
-(re-exports and some extensions).
+exported for haddocks.
+
+(re-exports of vinyl, and some extensions).
 
 -}
 module Export.Vinyl

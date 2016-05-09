@@ -1,4 +1,19 @@
 {-# LANGUAGE DataKinds, KindSignatures, ConstraintKinds #-}
+
+{-# LANGUAGE AutoDeriveTypeable, DeriveDataTypeable, DeriveGeneric,
+                     DeriveFunctor, DeriveFoldable, DeriveTraversable,
+                     LambdaCase, EmptyCase, TypeOperators, PostfixOperators,
+                     ViewPatterns, BangPatterns, KindSignatures,
+                     NamedFieldPuns, RecordWildCards, TupleSections,
+                     MultiWayIf, DoAndIfThenElse, EmptyDataDecls, Arrows,
+                     MultiParamTypeClasses, FlexibleContexts, FlexibleInstances,
+                     TypeFamilies, FunctionalDependencies,
+                     ScopedTypeVariables, StandaloneDeriving #-}
+-- inlined for doctest
+
+{-|
+
+-}
 module Export.Function where
 import Export.Vinyl
 import Export.Extra
@@ -11,6 +26,19 @@ import Control.Arrow (Kleisli(..))
 import Data.Typeable
 import Numeric.Natural
 
+{- $setup
+
+(doctest)
+
+>>> :set -XDataKinds
+>>> :set -XFlexibleContexts
+>>> let hs_or = newFunction (P::P "or") (||)
+
+>>> :t hs_or
+hs_or :: Function I I "or" '[Bool, Bool] Bool
+
+-}
+
 {-| an effectful, uncurried, named function.
 
 @
@@ -22,7 +50,7 @@ naming:
 * @m@: a monad
 * @f@: a functor
 * @name@: the name
-* @input@:
+* @inputs@: when uncurried
 * @output@:
 
 @name@ is type-level (not value-level) to support static validation
@@ -45,17 +73,6 @@ data Function
 
 -}
 type HaskellFunction = Function I I
-
-{-| no name.
-
-e.g. for convenience
-
->>> 'newFunction' nameless (+)
-
--}
-nameless :: P ""
-nameless = P
-
 
 getInputs
  :: forall function. ( EachHas Typeable (Inputs function)
@@ -86,21 +103,18 @@ getArity _ = tLength (P::P (Inputs function))
 
 {-| make an exportable 'Function' from any haskell function.
 
->>> let hs_or = newFunction (P::P "or") (||)
->>> :t hs_or
-hs_or :: Function I I "or" '[Bool, Bool] Bool
-
 (see 'P').
 
 TODO:
-
->>> :set -XVisibleTypeApplication
->>> let hs_or = newFunction @"or" (&&)
+@
+-- >>> :set -XVisibleTypeApplication
+-- >>> let hs_or = newFunction @"or" (&&)
 
 newFunction
  :: forall name function.
  -> function
  -> ...
+@
 
 -}
 newFunction
@@ -165,12 +179,15 @@ call_ (Function function) = function >>> fmap getConst
 {-| the name of the function,
 on both levels (value-level and type-level).
 
-(ignores its input)
+(ignores its input).
 
 >>> unTagged (functionName hs_or)
 "or"
->>> :kind! functionName hs_or
+
+@
+-- >>> :kind! functionName hs_or
 Tagged "or" String
+@
 
 -}
 functionName
@@ -178,3 +195,13 @@ functionName
  => Function m f name inputs output
  -> Tagged name String
 functionName _ = Tagged (symbolVal (P::P name))
+
+{-| no name.
+
+e.g. for convenience
+
+@newFunction nameless (+)@
+
+-}
+nameless :: P ""
+nameless = P
