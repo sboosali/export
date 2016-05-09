@@ -27,25 +27,30 @@
 -- -- 2. make it marshallable
 -- main = do
 --
--- -- unmarshalled:
+--  -- curried:
+--
+--  print $ (||) False True
+--  -- ==> True
+--
+--  -- un-marshalled:
 --
 --  print $ u_or  \`call`  ('I' False :& I True :& Z)  -- 'call'
 --  -- ==> True
 --
 --  -- marshalled via 'String':
---  let hs_String_or = 'marshalled' u_or
+--  let hs_String_or = 'stringMarshaller' \`marshalling` u_or   -- 'marshalling'
 --
 --  print $ hs_String_or \`call_` ('C' \"False\" :& C \"True\" :& Z)  -- 'call_'
---  -- ==> Just "True"
+--  -- ==> Just \"True"
 --
 --  -- marshalled via JSON ('B.ByteString'):
---  let hs_JSON_or = marshalled u_or
+--  let hs_JSON_or = jsonMarshaller \`marshalling` u_or
 --
 --  print $ hs_JSON_or \`call_` (B.pack "false" ':#' B.pack "true" :# Z)
---  -- ==> Right "true"
+--  -- ==> Right \"true"
 --
 --  -- marshalled via "Foreign.Ptr":
---  let hs_Ptr_or = marshalled u_or
+--  let hs_Ptr_or = 'pointerMarshaller' \`marshalling` u_or
 --
 --  pFalse <- 'new' False
 --  pTrue  <- new True

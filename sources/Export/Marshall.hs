@@ -1,4 +1,5 @@
-{-# LANGUAGE DataKinds, KindSignatures, ConstraintKinds, InstanceSigs #-}
+{-# LANGUAGE DataKinds, KindSignatures, ConstraintKinds #-}
+{-# LANGUAGE RankNTypes #-}
 module Export.Marshall where
 import Export.Vinyl
 import Export.Extra
@@ -12,129 +13,113 @@ import GHC.Exts (Constraint)
 import Text.Read (readMaybe)
 import Foreign
 
-{-| a canonical marshalling for a functor @f@.
+{-| a marshaller between @f a@ and @a@.
 
 @
-Marshall f m from_f into_f
+Marshaller f m from_f into_f
 @
 
 naming:
 
 * @f@: a functor. the foreign\/serialized\/persisted type.
 parametrized over @a@ to enable greater type-safety
-(e.g. @f ~ "Data.Storeable.Ptr"@).
+(e.g. @f ~ 'Ptr'@).
 * @m@: a monad that the marshalling can use and fail in.
 (e.g. @m ~ IO@).
-* @from_f@: a class for marshalling from @f@ (e.g. "Data.Storeable.peek")
-* @into_f@: a class for marshalling into @f@ (e.g. "Data.Storeable.poke")
+* @from_f@: a class for marshalling from @f@ (e.g. 'peek')
+* @into_f@: a class for marshalling into @f@ (e.g. 'poke')
 * @a@: (anything that safisfies the constraints.
 the type to be marshalled.)
 
-The @FunctionalDependencies@ (@f -> m from_f into_f@) state that @Marshall@
-is like a single-parameter typeclass on @f@. i.e. you can only have one
-@Marshall f ...@ for any @f@,
-but different @f@'s can use the same monad or the same constraints.
-
 -}
 
--- use data (like Iso), not a class?
+data Marshaller
+ (f      :: * -> *)
+ (m      :: * -> *)
+ (from_f :: * -> Constraint)
+ (into_f :: * -> Constraint)
 
-class (Monad m) =>
-
-    Marshall (f      :: * -> *)
-             (m      :: * -> *)
-             (from_f :: * -> Constraint)
-             (into_f :: * -> Constraint)
-
-    | f -> m from_f into_f
- where
-
- from :: (from_f a) => f a -> m a --TODO marshallFrom
- into :: (into_f a) => a   -> m (f a) --TODO marshallInto
-
-from_
- :: ( Marshall (C b) m from_f into_f
-    , from_f a
-    )
- => b
- -> m a
-from_ = C >>> from
-
-into_
- :: ( Marshall (C b) m from_f into_f
-    , into_f a
-    )
- => a
- -> m b
-into_ = into >>> fmap getConst
-
+ = Marshaller
+  { marshallFrom :: forall a. (from_f a) => f a -> m a
+  , marshallInto :: forall a. (into_f a) => a   -> m (f a)
+  }
 
 -- | marshall via strings
-instance Marshall (C String) Maybe Read Show where
+stringMarshaller :: Marshaller (C String) Maybe Read Show
+stringMarshaller = Marshaller{..}
+ where
+ --NOTE explicit signatures are necessary (because of RankNTypes?)
 
- from :: (Read a) => C String a -> Maybe a
- from = getConst >>> readMaybe
+ marshallFrom :: (Read a) => C String a -> Maybe a
+ marshallFrom = getConst >>> readMaybe
  -- >>> maybe (throwM "") return
 
- into :: (Show a) => a -> Maybe (C String a)
- into = show >>> C >>> return
-
+ marshallInto :: (Show a) => a -> Maybe (C String a)
+ marshallInto = show >>> C >>> return
 
 -- | marshall via text
-instance Marshall (C T.Text) Maybe Read Show where
+textMarshaller :: Marshaller (C T.Text) Maybe Read Show
+textMarshaller = Marshaller{..}
+ where
 
- from = getConst >>> T.unpack >>> readMaybe
+ marshallFrom :: (Read a) => C T.Text a -> Maybe a
+ marshallFrom = getConst >>> T.unpack >>> readMaybe
 
- into = show >>> T.pack >>> C >>> return
-
+ marshallInto :: (Show a) => a -> Maybe (C T.Text a)
+ marshallInto = show >>> T.pack >>> C >>> return
 
 -- | marshall via pointers
-instance Marshall Ptr IO Storable Storable where
-  from = peek
-  into = new
+pointerMarshaller :: Marshaller Ptr IO Storable Storable
+pointerMarshaller = Marshaller{..}
+  where
+
+  marshallFrom :: (Storable a) => Ptr a -> IO a
+  marshallFrom = peek
+
+  marshallInto :: (Storable a) => a -> IO (Ptr a)
+  marshallInto = new
 
 -- | marshall via JSON
-instance Marshall (C B.ByteString) (Either String) FromJSON ToJSON where
-  -- not Value. use newtype?
-  from = getConst >>> eitherDecode'
-  into = encode >>> C >>> return
+jsonMarshaller :: Marshaller (C B.ByteString) (Either String) FromJSON ToJSON
+jsonMarshaller = Marshaller{..}
+  where
+
+  marshallFrom :: (FromJSON a) => C B.ByteString a -> Either String a
+  marshallFrom = getConst >>> eitherDecode'
+
+  marshallInto :: (ToJSON a) => a -> Either String (C B.ByteString a)
+  marshallInto = encode >>> C >>> return
   -- eitherDecode' :: FromJSON a => ByteString -> Either String a
 
-{-| transform a 'Function' by 'Marshall'ing its inputs and output.
+{-| transform a function by marshalling its inputs and output.
 
 e.g. usage:
 
->>> let hs_Marshall_or = marshalled hs_or
->>> hs_Marshall_or `call_` (C "False" :& C "True" :& Z)
-Just "True"
->>> :t hs_Marshall_or
-hs_Marshall_or
-  :: (from_f Bool, into_f Bool, Marshall f m from_f into_f) =>
-     Function m f "or" '[Bool, Bool] Bool
-
->>> let hs_String_or = hs_Marshall_or :: Function Maybe (Const String) "or" [Bool,Bool] Bool
+>>> let hs_String_or = stringMarshaller `marshalling` u_or
 >>> :t hs_String_or
 hs_String_or
  :: Function Maybe (Const String) "or" '[Bool, Bool] Bool
 >>> hs_String_or `call_` (C "False" :& C "True" :& Z)
+Just "True"
 
-Note that (1) its type was inferred (and can be specialized)
-and (2) it consumes Booleans encoded as Strings, and
+Note that it consumes Booleans encoded as Strings, and
 produces a Boolean encoded as a String too. (see 'call_')
 
 e.g. specialization:
 
 @
-marshalled
- :: ( Marshall (C String) Maybe Read Show
+marshalling
+ :: ( Monad m
 
-    , "Export.Vinyl.EachHas" Read inputs
+    , 'EachHas' Read inputs
       -- the inputs can all be 'Read'.
 
     , Show output)
       -- the output can be 'Show'n.
 
- => Function I     'I'          name inputs output
+ => Marshaller (C String) Maybe Read Show
+
+ -> Function I     'I'          name inputs output
     -- take a function that consumes haskell types and always succeeds...
 
  -> Function Maybe ('C' String) name inputs output
@@ -142,20 +127,22 @@ marshalled
 @
 
 -}
-marshalled
+marshalling
  :: forall f m from_f into_f name input output.
-    ( Marshall f m from_f into_f
+    ( Monad m
     , EachHas from_f input
     ,         into_f output
     )
- => Function I I name input output
+ => Marshaller f m from_f into_f
+ -> Function I I name input output
  -> Function m f name input output
-marshalled (Function function) = Function $ \inputs -> do
-  _inputs <- rtraverseFrom (P::P from_f) _from inputs
+marshalling Marshaller{..} (Function function) = Function $ \inputs -> do
+  _inputs <- rtraverseFrom (P::P from_f) _marshallFrom inputs
   let Identity (Identity _output) = function _inputs
-  output <- into _output
+  output <- marshallInto _output
   return output
 
  where
- _from :: forall x. (from_f x) => f x -> m x
- _from = from
+ _marshallFrom :: forall x. (from_f x) => f x -> m x
+ _marshallFrom = marshallFrom
+ --TODO "marshallingWith"?
