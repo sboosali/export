@@ -1,0 +1,59 @@
+--------------------------------------------------
+-- LocalPackages ---------------------------------
+--------------------------------------------------
+packages:
+         ./
+
+----------------------------------------
+optional-packages:
+                  ../spiros
+                  ../Vinyl
+
+--------------------------------------------------
+-- CabalFlags ------------------------------------
+--------------------------------------------------
+
+jobs: 6
+-- ^
+-- = ($ncpus - 2)
+
+--------------------------------------------------
+-- LocalFlags (which apply only to LocalPackages)-
+--------------------------------------------------
+
+extra-lib-dirs:     /home/sboo/.nix-profile/lib/
+extra-include-dirs: /home/sboo/.nix-profile/include/
+extra-prog-path:    /home/sboo/.nix-profile/bin/
+---extra-prog-path:    /home/sboo/.nix-profile/libexec/
+
+--------------------------------------------------
+
+-- tests:         False
+-- benchmarks:    False
+-- documentation: True
+
+--------------------------------------------------
+
+-- haddock-hyperlink-source: True
+-- haddock-hoogle:           True
+
+--------------------------------------------------
+-- GlobalFlags -----------------------------------
+--------------------------------------------------
+
+--profiling:     True
+
+--------------------------------------------------
+
+package *
+  extra-lib-dirs:     /home/sboo/.nix-profile/lib/
+  extra-include-dirs: /home/sboo/.nix-profile/include/
+  extra-prog-path:    /home/sboo/.nix-profile/bin/
+
+--------------------------------------------------
+-- Notes -----------------------------------------
+--------------------------------------------------
+
+-- http://cabal.readthedocs.io/en/latest/nix-local-build.html
+
+--------------------------------------------------

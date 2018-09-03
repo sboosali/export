@@ -1,5 +1,9 @@
+cabal-version:       >=1.10
+
 name:                export
 version:             0.0.0
+build-type:          Simple
+
 synopsis:            turn a haskell function into (1) a server, (2) a command line interface, or (3) a foreign C export.
 description:         turn a haskell function into (1) a server, (2) a command line interface, or (3) a foreign C export.
 homepage:            http://github.com/sboosali/export#readme
@@ -9,9 +13,8 @@ author:              Spiros Boosalis
 maintainer:          samboosalis@gmail.com
 copyright:           2016 Spiros Boosalis
 category:            TODO
-build-type:          Simple
+
 -- extra-source-files:
-cabal-version:       >=1.10
 
 source-repository head
   type:     git
@@ -49,18 +52,18 @@ library
   -- Export.Types
 
  build-depends:
-    base >=4.7 && <5
-  , transformers ==0.4.*
+               base >=4.7 && <5
+             , transformers >=0.4
   -- , mtl
   -- , containers
-  , bytestring
+             , bytestring
   -- , stm
   -- , template-haskell
 
-  , vinyl
-  , deepseq
-  , semigroups
-  , tagged
+             , vinyl
+             , deepseq
+             , semigroups
+             , tagged
   -- , lens
   -- , exceptions
   -- , free
@@ -74,8 +77,8 @@ library
   -- , split
   -- , interpolatedstring-perl6
   -- , wl-pprint-text
-  , text
-  , aeson
+             , text
+             , aeson
   -- , hashable
   -- , unordered-containers
   -- , async

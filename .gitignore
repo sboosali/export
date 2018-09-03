@@ -1,34 +1,53 @@
 # my
-ignore/
-notes
-goals
-TODO
-cbits/main
-.projectile
+.sboo/
+ignore/ 
+temporary/
+
+# ghcid
+*.ghcid
+.ghcid.d/
 
 # Haskell
-dist
-cabal-dev
+.ghc.environment.*
+cabal.project.local
 *.o
 *.hi
 *.chi
 *.chs.h
-.virtualenv
-.hsenv
+report.html
 .cabal-sandbox/
 cabal.sandbox.config
 cabal.config
-report.html
+dist-newstyle/
+dist-*/
+dist/
 .stack-work/
+.styx/
+
+# nix
+result-*/
+result/
 
 # Emacs
-\#*
 *~
-.#*
+\#*
+.\#*
 \#*\#
-*.log
+,*
+.*.swp
+.*.swo
 TAGS
+.projectile
+
+# Python
+*.pyc
 
 # OS X
 .DS_Store
+
+# miscellaneous
+*.save
+.diagrams-cache
+history
+TAGS
 
