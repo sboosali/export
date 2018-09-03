@@ -88,6 +88,12 @@ examples: build-examples
 .PHONY: examples
 
 ##################################################
+watch:
+	ghcid -c 'cabal --ghc-option="-fdiagnostics-color=always" new-repl export'
+
+.PHONY: watch
+
+##################################################
 sdist: build
 	cabal sdist
 
