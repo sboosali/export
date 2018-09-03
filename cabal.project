@@ -1,10 +1,16 @@
 --------------------------------------------------
+-- Compiler --------------------------------------
+--------------------------------------------------
+
+-- compiler: 
+
+--------------------------------------------------
 -- LocalPackages ---------------------------------
 --------------------------------------------------
 packages:
          ./
 
-----------------------------------------
+--------------------------------------------------
 optional-packages:
                   ../spiros
                   ../Vinyl
@@ -56,4 +62,32 @@ package *
 
 -- http://cabal.readthedocs.io/en/latest/nix-local-build.html
 
+-- to use another compiler or flavor temporarily
+-- (i.e. besides the default `ghc` on your path),
+-- use `new-configure`. e.g.:
+-- 
+--
+--
+--   # another version:
+--         
+--   $ cabal new-configure         -w ghc-8.0.2
+--   $ cabal new-build
+--   ...
+--
+--
+--   # the default `ghcjs`:
+-- 
+--   $ cabal new-configure --ghcjs -w ghcjs
+--   $ cabal new-build
+--   ...
+--
+--   # back to the default `ghc`:
+-- 
+--   $ cabal new-configure --ghc   -w ghc
+--   $ cabal new-build
+--   ...
+--
+--
+--
+--         
 --------------------------------------------------

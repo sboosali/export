@@ -1,0 +1,3 @@
+[
+ (import ./ghcs.nix)
+]
